@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { ChevronLeft, Heart } from 'lucide-react';
-import { VendorCard } from '../components/VendorCard';
-import { BottomNav } from '../components/BottomNav';
-import { mockVendors } from '../data/mockData';
-import { useLanguage } from '../context/LanguageContext';
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { ChevronLeft, Heart } from "lucide-react";
+import { VendorCard } from "../components/VendorCard";
+import { BottomNav } from "../components/BottomNav";
+import { mockVendors } from "../data/mockData";
+import { useLanguage } from "../context/LanguageContext";
 
 export function FavoritesPage() {
   const navigate = useNavigate();
@@ -12,19 +12,22 @@ export function FavoritesPage() {
   const [favorites] = useState(mockVendors.slice(0, 4));
 
   return (
-    <div className="h-screen bg-[#1A1A1A] text-white flex flex-col overflow-hidden">
+    <div className="h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="sticky top-0 bg-[#1A1A1A] border-b border-[#333333] z-10">
+      <div className="sticky top-0 bg-[var(--bg-primary)] border-b border-[var(--border-primary)] z-10">
         <div className="flex items-center gap-4 p-4">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-[#242424] rounded-full transition-colors"
+            className="p-2 hover:bg-[var(--bg-secondary)] rounded-full transition-colors"
           >
             <ChevronLeft size={24} />
           </button>
           <div className="flex items-center gap-3">
-            <Heart size={24} className="text-[#FF8C42] fill-[#FF8C42]" />
-            <h1 className="text-2xl">{t('savedVendors')}</h1>
+            <Heart
+              size={24}
+              className="text-[var(--brand-orange)] fill-[var(--brand-orange)]"
+            />
+            <h1 className="text-2xl">{t("savedVendors")}</h1>
           </div>
         </div>
       </div>
@@ -44,12 +47,19 @@ export function FavoritesPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Heart size={64} className="mx-auto text-gray-600 mb-4" />
-              <p className="text-gray-400 text-lg">No saved vendors yet</p>
-              <p className="text-gray-500 text-sm mt-2">Start exploring and save your favorites!</p>
+              <Heart
+                size={64}
+                className="mx-auto text-[var(--text-tertiary)] mb-4"
+              />
+              <p className="text-[var(--text-secondary)] text-lg">
+                No saved vendors yet
+              </p>
+              <p className="text-[var(--text-tertiary)] text-sm mt-2">
+                Start exploring and save your favorites!
+              </p>
               <button
-                onClick={() => navigate('/home')}
-                className="mt-6 px-6 py-3 bg-[#FF8C42] rounded-2xl hover:bg-[#FF7A30] transition-colors"
+                onClick={() => navigate("/home")}
+                className="mt-6 px-6 py-3 bg-[var(--brand-orange)] text-white rounded-2xl hover:bg-[var(--brand-orange-dark)] transition-colors"
               >
                 Explore Vendors
               </button>

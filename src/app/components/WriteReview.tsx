@@ -1,28 +1,52 @@
-import { useState } from 'react';
-import { Star, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
+import { useState } from "react";
+import { Star, X } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { useLanguage } from "../context/LanguageContext";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface WriteReviewProps {
   isOpen: boolean;
   onClose: () => void;
   vendorName: string;
-  onSubmit: (rating: number, comment: string) => void;
+  onSubmit: (
+    rating: number,
+    comment: string,
+    user: {
+      nickname?: string;
+      name?: string;
+      avatar?: string | null;
+    },
+  ) => void;
 }
 
-export function WriteReview({ isOpen, onClose, vendorName, onSubmit }: WriteReviewProps) {
+export function WriteReview({
+  isOpen,
+  onClose,
+  vendorName,
+  onSubmit,
+}: WriteReviewProps) {
   const { language } = useLanguage();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth0();
+
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
 
   const handleSubmit = () => {
+    if (!isAuthenticated) {
+      alert("Please login first");
+      return;
+    }
+
     if (rating > 0) {
-      onSubmit(rating, comment);
+      onSubmit(rating, comment, {
+        nickname: user?.nickname,
+        name: user?.name,
+        avatar: user?.picture || null,
+      });
+
       setRating(0);
-      setComment('');
+      setComment("");
       onClose();
     }
   };
@@ -31,6 +55,7 @@ export function WriteReview({ isOpen, onClose, vendorName, onSubmit }: WriteRevi
     <AnimatePresence>
       {isOpen && (
         <>
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -38,6 +63,8 @@ export function WriteReview({ isOpen, onClose, vendorName, onSubmit }: WriteRevi
             onClick={onClose}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
           />
+
+          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -48,7 +75,7 @@ export function WriteReview({ isOpen, onClose, vendorName, onSubmit }: WriteRevi
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">
-                  {language === 'en' ? 'Write a Review' : 'समीक्षा लिखें'}
+                  {language === "en" ? "Write a Review" : "समीक्षा लिखें"}
                 </h2>
                 <button
                   onClick={onClose}
@@ -61,15 +88,15 @@ export function WriteReview({ isOpen, onClose, vendorName, onSubmit }: WriteRevi
               {/* Vendor Name */}
               <div className="mb-6">
                 <p className="text-[var(--text-secondary)] text-sm mb-1">
-                  {language === 'en' ? 'Reviewing' : 'समीक्षा करना'}
+                  {language === "en" ? "Reviewing" : "समीक्षा करना"}
                 </p>
                 <p className="font-semibold text-lg">{vendorName}</p>
               </div>
 
-              {/* Star Rating */}
+              {/* Rating */}
               <div className="mb-6">
                 <p className="text-sm font-medium mb-3">
-                  {language === 'en' ? 'Your Rating' : 'आपकी रेटिंग'}
+                  {language === "en" ? "Your Rating" : "आपकी रेटिंग"}
                 </p>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -84,9 +111,9 @@ export function WriteReview({ isOpen, onClose, vendorName, onSubmit }: WriteRevi
                         size={40}
                         className={`${
                           star <= (hoverRating || rating)
-                            ? 'text-[var(--brand-orange)] fill-[var(--brand-orange)]'
-                            : 'text-[var(--text-tertiary)]'
-                        } transition-colors`}
+                            ? "text-[var(--brand-orange)] fill-[var(--brand-orange)]"
+                            : "text-[var(--text-tertiary)]"
+                        }`}
                       />
                     </button>
                   ))}
@@ -96,21 +123,21 @@ export function WriteReview({ isOpen, onClose, vendorName, onSubmit }: WriteRevi
               {/* Comment */}
               <div className="mb-6">
                 <label className="text-sm font-medium mb-2 block">
-                  {language === 'en' ? 'Your Review' : 'आपकी समीक्षा'}{' '}
+                  {language === "en" ? "Your Review" : "आपकी समीक्षा"}{" "}
                   <span className="text-[var(--text-secondary)]">
-                    ({language === 'en' ? 'Optional' : 'वैकल्पिक'})
+                    ({language === "en" ? "Optional" : "वैकल्पिक"})
                   </span>
                 </label>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder={
-                    language === 'en'
-                      ? 'Share your experience with others...'
-                      : 'दूसरों के साथ अपना अनुभव साझा करें...'
+                    language === "en"
+                      ? "Share your experience..."
+                      : "अपना अनुभव साझा करें..."
                   }
                   rows={4}
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl py-3 px-4 focus:outline-none focus:border-[var(--brand-orange)] transition-colors resize-none"
+                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl py-3 px-4 focus:outline-none focus:border-[var(--brand-orange)] resize-none"
                 />
               </div>
 
@@ -118,16 +145,16 @@ export function WriteReview({ isOpen, onClose, vendorName, onSubmit }: WriteRevi
               <div className="flex gap-3">
                 <button
                   onClick={onClose}
-                  className="flex-1 py-3 rounded-2xl font-semibold bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                  className="flex-1 py-3 rounded-2xl font-semibold bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)]"
                 >
-                  {language === 'en' ? 'Cancel' : 'रद्द करें'}
+                  {language === "en" ? "Cancel" : "रद्द करें"}
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={rating === 0}
-                  className="flex-1 py-3 rounded-2xl font-semibold bg-[var(--brand-orange)] text-white hover:bg-[var(--brand-orange-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 rounded-2xl font-semibold bg-[var(--brand-orange)] text-white hover:bg-[var(--brand-orange-dark)] disabled:opacity-50"
                 >
-                  {language === 'en' ? 'Submit' : 'जमा करें'}
+                  {language === "en" ? "Submit" : "जमा करें"}
                 </button>
               </div>
             </div>
