@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PRISMA_DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  auth0Sub      String         @unique @map("auth0_sub")
+  email         String?
+  fullName      String?        @map("full_name")
+  picture       String?
+  phone         String?
+  role          String         @default("user")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @default(now()) @map("updated_at")
+  vendor        Vendor?
+  favorites     Favorite[]
+  reviews       Review[]
+  posts         Post[]
+  postComments  PostComment[]
+  reels         Reel[]
+  reelComments  ReelComment[]
+  addresses     Address[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Vendor {
+  id             Int             @id @default(autoincrement())
+  ownerUserId    Int             @unique @map("owner_user_id")
+  stallName      String          @map("stall_name")
+  description    String?
+  foodTypes      String[]        @default([]) @map("food_types")
+  phone          String?
+  openTime       String?         @map("open_time")
+  closeTime      String?         @map("close_time")
+  status         String          @default("draft")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @default(now()) @map("updated_at")
+  owner          User            @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  location       VendorLocation?
+  photos         VendorPhoto[]
+  menuItems      MenuItem[]
+  favorites      Favorite[]
+  reviews        Review[]
+  reels          Reel[]
+
+  @@map("vendors")
+}
+
+model VendorLocation {
+  vendorId     Int     @id @map("vendor_id")
+  addressText  String? @map("address_text")
+  lat          Float?
+  lng          Float?
+  vendor       Vendor  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_locations")
+}
+
+model VendorPhoto {
+  id        Int    @id @default(autoincrement())
+  vendorId  Int    @map("vendor_id")
+  url       String
+  sortOrder Int    @default(0) @map("sort_order")
+  vendor    Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_photos")
+}
+
+model MenuItem {
+  id         Int      @id @default(autoincrement())
+  vendorId   Int      @map("vendor_id")
+  name       String
+  priceCents Int      @map("price_cents")
+  isVeg      Boolean  @default(true) @map("is_veg")
+  available  Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  vendor     Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("menu_items")
+}
+
+model Favorite {
+  userId    Int      @map("user_id")
+  vendorId  Int      @map("vendor_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@id([userId, vendorId])
+  @@map("favorites")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  vendorId  Int      @map("vendor_id")
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model Post {
+  id          Int           @id @default(autoincrement())
+  userId      Int           @map("user_id")
+  content     String
+  locationText String?      @map("location_text")
+  lat         Float?
+  lng         Float?
+  createdAt   DateTime      @default(now()) @map("created_at")
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media       PostMedia[]
+  comments    PostComment[]
+
+  @@map("posts")
+}
+
+model PostMedia {
+  id      Int    @id @default(autoincrement())
+  postId  Int    @map("post_id")
+  url     String
+  type    String
+  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("post_media")
+}
+
+model PostComment {
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  userId    Int      @map("user_id")
+  comment   String
+  createdAt DateTime @default(now()) @map("created_at")
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("post_comments")
+}
+
+model Reel {
+  id           Int           @id @default(autoincrement())
+  vendorId     Int?          @map("vendor_id")
+  userId       Int           @map("user_id")
+  videoUrl     String        @map("video_url")
+  thumbnailUrl String?       @map("thumbnail_url")
+  description  String?
+  createdAt    DateTime      @default(now()) @map("created_at")
+  vendor       Vendor?       @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments     ReelComment[]
+
+  @@map("reels")
+}
+
+model ReelComment {
+  id        Int      @id @default(autoincrement())
+  reelId    Int      @map("reel_id")
+  userId    Int      @map("user_id")
+  comment   String
+  createdAt DateTime @default(now()) @map("created_at")
+  reel      Reel     @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reel_comments")
+}
+
+model Address {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  type        String   @default("other")
+  label       String
+  addressText String   @map("address_text")
+  lat         Float?
+  lng         Float?
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  type      String
+  title     String
+  message   String
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}

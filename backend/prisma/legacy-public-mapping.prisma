@@ -1,0 +1,57 @@
+// Legacy public-schema mapping snapshot (read-only reference).
+// This file documents existing pre-app tables that already exist in `public`
+// so we can preserve them and avoid destructive migrations.
+//
+// NOTE: This schema is NOT used by runtime Prisma client.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/legacy-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model LegacyUser {
+  id         String       @id
+  name       String
+  username   String
+  password   String?
+  avatar     String?
+  email      String
+  location   String?
+  bio        String?
+  twitter    String?
+  isVerified Boolean      @default(false)
+  createdAt  DateTime
+  updatedAt  DateTime
+  instagram  String?
+  portfolio  String?
+  assets     LegacyAsset[]
+
+  @@map("User")
+}
+
+model LegacyAsset {
+  id           String      @id
+  userId       String
+  title        String
+  description  String?
+  category     String
+  tags         String[]?
+  fileUrl      String
+  fileType     String
+  pricingType  String
+  price        Float?
+  startPrice   Float?
+  reservePrice Float?
+  duration     Int?
+  royalty      Int
+  createdAt    DateTime
+  user         LegacyUser  @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("Asset")
+}
+

@@ -1,0 +1,30 @@
+{
+  "name": "gully-ka-taste-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "migrate:up": "node scripts/migrate-runner.js up",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push"
+  },
+  "dependencies": {
+    "@figma/my-make-file": "file:..",
+    "@prisma/client": "^6.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^7.2.0",
+    "jose": "^5.10.0",
+    "pg": "^8.16.3",
+    "pino": "^9.9.5",
+    "pino-http": "^10.5.0",
+    "yup": "^1.7.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.6.0"
+  }
+}
