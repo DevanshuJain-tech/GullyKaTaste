@@ -6,7 +6,6 @@ const requiredVars = [
   "DATABASE_URL",
   "PRISMA_DATABASE_URL",
   "AUTH0_AUDIENCE",
-  "AUTH0_CLIENT_ID",
   "AUTH0_ISSUER_BASE_URL",
 ];
 
@@ -33,7 +32,6 @@ export const config = {
   prismaDatabaseUrl: process.env.PRISMA_DATABASE_URL,
   auth0Domain: process.env.AUTH0_DOMAIN,
   auth0Audience: process.env.AUTH0_AUDIENCE,
-  auth0ClientId: process.env.AUTH0_CLIENT_ID,
   auth0IssuerBaseUrl: issuerBaseUrl,
   auth0Issuer: issuerBaseUrl.endsWith("/") ? issuerBaseUrl : `${issuerBaseUrl}/`,
   corsOrigins,

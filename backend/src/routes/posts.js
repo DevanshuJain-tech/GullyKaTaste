@@ -3,10 +3,12 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { prisma } from "../prisma/client.js";
 import { HttpError } from "../errors.js";
 import { buildPagination, parsePagination } from "../utils/pagination.js";
+import { createUserWriteLimiter } from "../middleware/rateLimiters.js";
 import { createPostCommentSchema, createPostSchema } from "../validation/post.schema.js";
 import { validateOrThrow } from "../validation/validateOrThrow.js";
 
 export const postsRouter = Router();
+const postWriteLimiter = createUserWriteLimiter({ windowMs: 60 * 1000, limit: 25 });
 
 function mapPostRow(row, media, commentsCount) {
   return {
@@ -76,6 +78,7 @@ postsRouter.get(
 
 postsRouter.post(
   "/posts",
+  postWriteLimiter,
   asyncHandler(async (req, res) => {
     const payload = await validateOrThrow(createPostSchema, req.body);
 
@@ -138,6 +141,7 @@ postsRouter.get(
 
 postsRouter.post(
   "/posts/:id/comments",
+  postWriteLimiter,
   asyncHandler(async (req, res) => {
     const postId = Number(req.params.id);
     if (!Number.isInteger(postId) || postId <= 0) {

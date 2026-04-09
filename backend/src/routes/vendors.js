@@ -3,6 +3,7 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { buildPagination, parsePagination } from "../utils/pagination.js";
 import { HttpError } from "../errors.js";
 import { prisma } from "../prisma/client.js";
+import { createUserWriteLimiter } from "../middleware/rateLimiters.js";
 import {
   onboardingSchema,
   patchVendorSchema,
@@ -11,6 +12,7 @@ import {
 import { validateOrThrow } from "../validation/validateOrThrow.js";
 
 export const vendorsRouter = Router();
+const vendorWriteLimiter = createUserWriteLimiter({ windowMs: 60 * 1000, limit: 10 });
 
 function formatHours(openTime, closeTime) {
   if (!openTime || !closeTime) return null;
@@ -81,7 +83,6 @@ function mapVendorDetail(vendor, currentUser) {
   const summary = mapVendorSummary(vendor, currentUser);
   return {
     id: String(vendor.id),
-    owner_user_id: String(vendor.ownerUserId),
     name: vendor.stallName,
     description: vendor.description,
     tags: vendor.foodTypes ?? [],
@@ -318,6 +319,7 @@ async function upsertVendorProfile(ownerUserId, payload, statusOverride) {
 
 vendorsRouter.post(
   "/vendor/onboarding/submit",
+  vendorWriteLimiter,
   asyncHandler(async (req, res) => {
     const payload = await validateOrThrow(onboardingSchema, req.body);
     const vendorId = await upsertVendorProfile(req.currentUser.id, payload, "submitted");
@@ -340,6 +342,7 @@ vendorsRouter.post(
 
 vendorsRouter.patch(
   "/vendor/me",
+  vendorWriteLimiter,
   asyncHandler(async (req, res) => {
     const payload = await validateOrThrow(patchVendorSchema, req.body);
     const existing = await prisma.vendor.findUnique({
@@ -354,7 +357,7 @@ vendorsRouter.patch(
       phone: payload.phone !== undefined ? payload.phone : existing.phone,
       open_time: payload.open_time !== undefined ? payload.open_time : existing.openTime,
       close_time: payload.close_time !== undefined ? payload.close_time : existing.closeTime,
-      status: payload.status ?? existing.status,
+      status: existing.status,
       location: payload.location,
       photos: payload.photos,
       menu_items: payload.menu_items,

@@ -113,7 +113,9 @@ export function MapView({ vendors, userLocation, onVendorClick }: MapViewProps) 
           setLoading(false);
         }
       } catch (error) {
-        console.error("Google Maps failed to load, using simple map.", error);
+        if (import.meta.env.DEV) {
+          console.error("Google Maps failed to load, using simple map.", error);
+        }
         if (!isCancelled) {
           setUseGoogleMaps(false);
           setLoading(false);

@@ -3,6 +3,7 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { prisma } from "../prisma/client.js";
 import { HttpError } from "../errors.js";
 import { buildPagination, parsePagination } from "../utils/pagination.js";
+import { createUserWriteLimiter } from "../middleware/rateLimiters.js";
 import {
   createReelCommentSchema,
   createReelSchema,
@@ -10,6 +11,7 @@ import {
 import { validateOrThrow } from "../validation/validateOrThrow.js";
 
 export const reelsRouter = Router();
+const reelWriteLimiter = createUserWriteLimiter({ windowMs: 60 * 1000, limit: 20 });
 
 function mapReelRow(row) {
   return {
@@ -70,6 +72,7 @@ reelsRouter.get(
 
 reelsRouter.post(
   "/reels",
+  reelWriteLimiter,
   asyncHandler(async (req, res) => {
     const payload = await validateOrThrow(createReelSchema, req.body);
 
@@ -143,6 +146,7 @@ reelsRouter.get(
 
 reelsRouter.post(
   "/reels/:id/comments",
+  reelWriteLimiter,
   asyncHandler(async (req, res) => {
     const reelId = Number(req.params.id);
     if (!Number.isInteger(reelId) || reelId <= 0) {

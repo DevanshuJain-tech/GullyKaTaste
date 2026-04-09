@@ -2,6 +2,7 @@ import { Router } from "express";
 import crypto from "node:crypto";
 import * as yup from "yup";
 import { asyncHandler } from "../middleware/asyncHandler.js";
+import { createUserWriteLimiter } from "../middleware/rateLimiters.js";
 import { config } from "../config.js";
 import { HttpError } from "../errors.js";
 import { validateOrThrow } from "../validation/validateOrThrow.js";
@@ -11,12 +12,18 @@ export const uploadsRouter = Router();
 const signUploadSchema = yup.object({
   resource_type: yup
     .string()
-    .oneOf(["image", "video", "raw", "auto"])
+    .oneOf(["image", "video"])
     .default("image"),
+});
+
+const signUploadLimiter = createUserWriteLimiter({
+  windowMs: 60 * 1000,
+  limit: 20,
 });
 
 uploadsRouter.post(
   "/uploads/sign",
+  signUploadLimiter,
   asyncHandler(async (req, res) => {
     const parsed = await validateOrThrow(signUploadSchema, req.body);
 
@@ -37,6 +44,9 @@ uploadsRouter.post(
           const baseFields = {
             upload_preset: config.cloudinaryUploadPreset,
             ...(config.cloudinaryFolder ? { folder: config.cloudinaryFolder } : {}),
+            ...(parsed.resource_type === "image"
+              ? { allowed_formats: "jpg,jpeg,png,webp,gif", max_file_size: String(10 * 1024 * 1024) }
+              : { allowed_formats: "mp4,webm,mov", max_file_size: String(100 * 1024 * 1024) }),
           };
 
           // If API key/secret are configured, return signed upload params.

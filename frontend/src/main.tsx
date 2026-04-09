@@ -11,8 +11,8 @@ const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN as string | undefined;
 const auth0ClientId = import.meta.env.VITE_AUTH0_CLIENT_ID as string | undefined;
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE as string | undefined;
 
-if (!auth0Domain || !auth0ClientId) {
-  throw new Error("Missing Auth0 environment variables");
+if (!auth0Domain || !auth0ClientId || !auth0Audience) {
+  throw new Error("Missing Auth0 environment variables (domain, client id, audience)");
 }
 
 createRoot(document.getElementById("root")!).render(
@@ -22,9 +22,9 @@ createRoot(document.getElementById("root")!).render(
       clientId={auth0ClientId}
       authorizationParams={{
         redirect_uri: window.location.origin,
-        ...(auth0Audience ? { audience: auth0Audience } : {}),
+        audience: auth0Audience,
       }}
-      cacheLocation="localstorage"
+      cacheLocation="memory"
       useRefreshTokens={false}
       useRefreshTokensFallback={true}
     >

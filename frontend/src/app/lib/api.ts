@@ -2,6 +2,20 @@ import axios from "axios";
 import { toast } from "sonner";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
+const isProduction = import.meta.env.PROD;
+
+function isLocalHttpUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" && ["localhost", "127.0.0.1"].includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+if (isProduction && !API_BASE_URL.startsWith("https://") && !isLocalHttpUrl(API_BASE_URL)) {
+  throw new Error("VITE_API_BASE_URL must use HTTPS outside local development");
+}
 
 export interface ApiPagination {
   page: number;
@@ -75,7 +89,6 @@ export interface VendorMenuItem {
 
 export interface VendorDetail {
   id: string;
-  owner_user_id: string;
   name: string;
   description: string | null;
   tags: string[];
@@ -572,7 +585,7 @@ export async function markNotificationRead(notificationId: string) {
   return unwrap(response);
 }
 
-export async function signUpload(resourceType: "image" | "video" | "raw" | "auto") {
+export async function signUpload(resourceType: "image" | "video") {
   const response = await apiClient.post<
     ApiResponse<{
       provider: "cloudinary";
@@ -586,7 +599,36 @@ export async function signUpload(resourceType: "image" | "video" | "raw" | "auto
   return unwrap(response);
 }
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const ALLOWED_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+
+function validateUploadFile(file: File, resourceType: "image" | "video") {
+  if (file.size <= 0) {
+    throw new Error("Selected file is empty");
+  }
+
+  if (resourceType === "image") {
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      throw new Error("Unsupported image format");
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      throw new Error("Image must be 10MB or smaller");
+    }
+    return;
+  }
+
+  if (!ALLOWED_VIDEO_TYPES.has(file.type)) {
+    throw new Error("Unsupported video format");
+  }
+  if (file.size > MAX_VIDEO_BYTES) {
+    throw new Error("Video must be 100MB or smaller");
+  }
+}
+
 export async function uploadFileToProvider(file: File, resourceType: "image" | "video") {
+  validateUploadFile(file, resourceType);
   const signed = await signUpload(resourceType);
 
   if (signed.provider !== "cloudinary") {

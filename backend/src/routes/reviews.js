@@ -4,9 +4,11 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { prisma } from "../prisma/client.js";
 import { HttpError } from "../errors.js";
 import { buildPagination, parsePagination } from "../utils/pagination.js";
+import { createUserWriteLimiter } from "../middleware/rateLimiters.js";
 import { validateOrThrow } from "../validation/validateOrThrow.js";
 
 export const reviewsRouter = Router();
+const reviewWriteLimiter = createUserWriteLimiter({ windowMs: 60 * 1000, limit: 20 });
 
 const createReviewSchema = yup.object({
   rating: yup.number().integer().min(1).max(5).required(),
@@ -113,6 +115,7 @@ reviewsRouter.get(
 
 reviewsRouter.post(
   "/vendors/:id/reviews",
+  reviewWriteLimiter,
   asyncHandler(async (req, res) => {
     const vendorId = Number(req.params.id);
     if (!Number.isInteger(vendorId) || vendorId <= 0) {
@@ -175,6 +178,7 @@ reviewsRouter.post(
 
 reviewsRouter.patch(
   "/reviews/:id",
+  reviewWriteLimiter,
   asyncHandler(async (req, res) => {
     const reviewId = Number(req.params.id);
     if (!Number.isInteger(reviewId) || reviewId <= 0) {
@@ -221,6 +225,7 @@ reviewsRouter.patch(
 
 reviewsRouter.delete(
   "/reviews/:id",
+  reviewWriteLimiter,
   asyncHandler(async (req, res) => {
     const reviewId = Number(req.params.id);
     if (!Number.isInteger(reviewId) || reviewId <= 0) {

@@ -12,16 +12,24 @@ import { attachCurrentUser } from "./middleware/attachCurrentUser.js";
 
 export function createApp({ routes, corsOrigins = [] }) {
   const app = express();
+  const localDevOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+  const resolvedCorsOrigins =
+    corsOrigins.length > 0
+      ? corsOrigins
+      : process.env.NODE_ENV === "production"
+        ? []
+        : localDevOrigins;
+
+  if (resolvedCorsOrigins.length === 0) {
+    throw new Error("CORS_ORIGINS must be configured for this environment");
+  }
 
   app.disable("x-powered-by");
 
   app.use(helmet());
   app.use(
     cors({
-      origin:
-        corsOrigins.length > 0
-          ? corsOrigins
-          : (origin, callback) => callback(null, origin ?? true),
+      origin: resolvedCorsOrigins,
       credentials: true,
     }),
   );

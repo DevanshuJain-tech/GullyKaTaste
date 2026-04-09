@@ -2,7 +2,6 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { config } from "../config.js";
 
 const JWKS = createRemoteJWKSet(new URL(`${config.auth0Issuer}.well-known/jwks.json`));
-const acceptedAudiences = [config.auth0Audience, config.auth0ClientId].filter(Boolean);
 
 export async function requireAuth(req, res, next) {
   try {
@@ -17,10 +16,7 @@ export async function requireAuth(req, res, next) {
 
     const { payload } = await jwtVerify(token, JWKS, {
       issuer: config.auth0Issuer,
-      audience:
-        acceptedAudiences.length === 1
-          ? acceptedAudiences[0]
-          : acceptedAudiences,
+      audience: config.auth0Audience,
     });
 
     req.auth = payload;

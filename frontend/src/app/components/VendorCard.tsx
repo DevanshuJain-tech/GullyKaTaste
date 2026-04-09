@@ -75,7 +75,20 @@ export function VendorCard({ vendor, onClick }: VendorCardProps) {
           whileTap={{ scale: 0.9 }}
           onClick={(e) => {
             e.stopPropagation();
-            window.open(`https://www.google.com/maps/dir/?api=1&destination=${vendor.latitude},${vendor.longitude}`);
+            if (
+              typeof vendor.latitude !== "number" ||
+              typeof vendor.longitude !== "number" ||
+              Number.isNaN(vendor.latitude) ||
+              Number.isNaN(vendor.longitude)
+            ) {
+              return;
+            }
+            const destination = encodeURIComponent(`${vendor.latitude},${vendor.longitude}`);
+            window.open(
+              `https://www.google.com/maps/dir/?api=1&destination=${destination}`,
+              "_blank",
+              "noopener,noreferrer",
+            );
           }}
           className="absolute top-3 right-3 p-2 bg-black/40 backdrop-blur-sm rounded-full hover:bg-black/60 transition-colors"
         >

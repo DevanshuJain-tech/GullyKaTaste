@@ -52,7 +52,6 @@ export const patchVendorSchema = yup
     phone: yup.string().trim().max(30).nullable().optional(),
     open_time: yup.string().matches(TIME_REGEX).nullable().optional(),
     close_time: yup.string().matches(TIME_REGEX).nullable().optional(),
-    status: yup.string().oneOf(["draft", "submitted"]).optional(),
     location: locationSchema.nullable().optional(),
     photos: yup.array().of(photoSchema).max(20).optional(),
     menu_items: yup.array().of(menuItemSchema).max(100).optional(),

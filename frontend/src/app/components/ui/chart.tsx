@@ -8,6 +8,10 @@ import { cn } from "./utils";
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
 
+const KEY_SAFE_REGEX = /^[a-zA-Z0-9_-]+$/;
+const CSS_COLOR_SAFE_REGEX =
+  /^(#[0-9a-fA-F]{3,8}|rgba?\([0-9.,\s%]+\)|hsla?\([0-9.,\s%]+\)|[a-zA-Z]+)$/;
+
 export type ChartConfig = {
   [k in string]: {
     label?: React.ReactNode;
@@ -78,6 +82,10 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
+  const sanitizeKey = (key: string) => (KEY_SAFE_REGEX.test(key) ? key : null);
+  const sanitizeColor = (value: string | undefined) =>
+    value && CSS_COLOR_SAFE_REGEX.test(value) ? value : null;
+
   return (
     <style
       dangerouslySetInnerHTML={{
@@ -87,10 +95,15 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
+    const safeKey = sanitizeKey(key);
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    const safeColor = sanitizeColor(color);
+    if (!safeKey || !safeColor) {
+      return null;
+    }
+    return `  --color-${safeKey}: ${safeColor};`;
   })
   .join("\n")}
 }

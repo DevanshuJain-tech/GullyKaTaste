@@ -7,17 +7,13 @@ import { clearUserState, loadMe } from "../store/userSlice";
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE as string | undefined;
 
 export function AuthBootstrap() {
-  const { isAuthenticated, isLoading, getAccessTokenSilently, getIdTokenClaims } = useAuth0();
+  const { isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
   const dispatch = useAppDispatch();
 
   const tokenProvider = useMemo(
     () => async () => {
       if (!auth0Audience) {
-        const claims = await getIdTokenClaims();
-        if (!claims?.__raw) {
-          throw new Error("Unable to obtain ID token");
-        }
-        return claims.__raw;
+        throw new Error("Missing VITE_AUTH0_AUDIENCE for API token retrieval");
       }
 
       const tokenOptions = {
@@ -41,7 +37,7 @@ export function AuthBootstrap() {
         });
       }
     },
-    [getAccessTokenSilently, getIdTokenClaims],
+    [getAccessTokenSilently],
   );
 
   useEffect(() => {
